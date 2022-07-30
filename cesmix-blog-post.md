@@ -129,30 +129,9 @@ force(norm(r_diff), r_diff, p)
 
 **[Atomistic.jl](https://github.com/cesmix-mit/Atomistic.jl/)**. This package provides an integrated workflow for MD simulations. It provides **an interface to [Molly.jl](https://juliamolsim.github.io/Molly.jl/dev/) and [NBodySimulator.jl](https://github.com/SciML/NBodySimulator.jl)** that allows to define and run the MD simulation, and post-process its results. Atomistic.jl is compatible with any interatomic potential that implements the abstract interface defined by InteratomicPotentials.jl. 
 
-The code below shows an implementation of the CW1, that describes a classical  MD  simulation. It is based on an Argon system with 864 atoms and LJ. The example integrates AtomsBase.jl, InteratomicPotentials.jl, and the MD uses the NBodySimulator. 
+The code below shows an implementation of the CW1, that describes a classical  MD  simulation. It is based on an Argon system with 864 atoms and LJ. The example integrates AtomsBase.jl, InteratomicPotentials.jl, and the MD uses the Molly.jl. CESMIX is collaborating with the developments of this MD tool and accelerating its execution.
+
 <!-- Based on this guide: https://ase.tufts.edu/chemistry/lin/images/FortranMD_TeachersGuide.pdf -->
-
-```julia
-N = 864
-box_size = 3.47786u"nm"
-reference_temp = 94.4u"K"
-thermostat_prob = 0.1 # this number was chosen arbitrarily
-Δt = 1e-2u"ps"
-
-initial_system = generate_atoms_in_cubic_cell(N, :Ar, box_size, reference_temp)
-
-eq_steps = 2000
-eq_thermostat = NBodySimulator.AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
-eq_simulator = NBSimulator(Δt, eq_steps, thermostat=eq_thermostat)
-potential = InteratomicPotentials.LennardJones(1.657e-21u"J", 0.34u"nm", 0.765u"nm", [:Ar])
-eq_result = simulate(initial_system, eq_simulator, potential)
-
-prod_steps = 5000
-prod_simulator = NBSimulator(Δt, prod_steps, t₀=get_time(eq_result))
-prod_result = simulate(get_system(eq_result), prod_simulator, potential)
-```
-
-In case there is an interest in working with Molly instead of NBS, from the user perspective only a few changes are needed: mainly in the thermostat and the definition of the simulator.
 
 ```julia
 N = 864
@@ -171,6 +150,28 @@ eq_result = simulate(initial_system, eq_simulator, potential)
 
 prod_steps = 5000
 prod_simulator = MollySimulator(Δt, prod_steps, t₀=get_time(eq_result))
+prod_result = simulate(get_system(eq_result), prod_simulator, potential)
+```
+
+In case there is an interest in working with NBS instead of Molly, from the user perspective only a few changes are needed: mainly in the thermostat and the definition of the simulator. 
+
+```julia
+N = 864
+box_size = 3.47786u"nm"
+reference_temp = 94.4u"K"
+thermostat_prob = 0.1 # this number was chosen arbitrarily
+Δt = 1e-2u"ps"
+
+initial_system = generate_atoms_in_cubic_cell(N, :Ar, box_size, reference_temp)
+
+eq_steps = 2000
+eq_thermostat = NBodySimulator.AndersenThermostat(austrip(reference_temp), thermostat_prob / austrip(Δt))
+eq_simulator = NBSimulator(Δt, eq_steps, thermostat=eq_thermostat)
+potential = InteratomicPotentials.LennardJones(1.657e-21u"J", 0.34u"nm", 0.765u"nm", [:Ar])
+eq_result = simulate(initial_system, eq_simulator, potential)
+
+prod_steps = 5000
+prod_simulator = NBSimulator(Δt, prod_steps, t₀=get_time(eq_result))
 prod_result = simulate(get_system(eq_result), prod_simulator, potential)
 ```
 
@@ -194,11 +195,11 @@ Also, this tool abstracts the generation of plots of the simulation results: tem
 
 An atomistic ecosystem is flourishing in Julia. Efforts are being made to synchronize and integrate with the state-of-the-art, both in terms of features and performance. Tools such as AtomsBase.jl and InteratomicPotentials.jl aim to bring together several packages related to atomic configurations and potentials into **one unified Julia interface**, as well as to provide some very useful implementations. Linked to this, Atomistic.jl is making the manipulation of **MD simulations more transparent**, making it easier to access Molly.jl and NBodySimulator.jl. In addition, **uncertainty quantification** features are being cooked in PotentialLearning.jl or Carom.jl, intended to be used as a workflow **integration backbone**. Also, work on **machine learning potentials** is being done in the aforementioned packages and others such as MLP.jl, MDP.jl, and ChemistryFeaturization.jl. In particular, facilitating their definition by providing user-friendly interfaces and the reuse of atomic descriptors from different implementations promises a way to **improve performance without sacrificing the accuracy** of first-principles methods. The impact on **differentiability** extends to almost all packages. Particularly, Enzyme not only is **far faster**, even on existing Julia code, but it allows Julia to **import foreign code** (such as C++ LAMMPS, Fortran libs, etc) and be differentiated. All these efforts enable **composability**, a key ingredient for working with and enhancing **heterogeneous codes and technologies**, specifically through developments such as LAMMPS.jl. 
 
-We are working in an increasingly organic way, with initiaives such as **CESMIX** or **JuliaMolSim**.
+Work is increasingly organic, with initiatives such as **CESMIX** or **JuliaMolSim**.
 New developments are being born, while others are growing stronger.
 Julia could reshape the next generation of atomistic simulation software by **giving control back to domain scientists** and rethinking scientific software through **differentiable programming**. 
 Julia can prove that it is possible to address these simulations using **a single high-level programming language without compromising performance**.
-If you want to join us, we are waiting for **you**.
+If you are interested in these topics and want to make your mark in this thriving ecosystem, **we are waiting for you**.
 
 
 ## References
